@@ -26,11 +26,31 @@
 #include <binder/ProcessState.h>
 #include <hidl/HidlTransportSupport.h>
 #include <hidl/LegacySupport.h>
+#include <com/qualcomm/qti/bluetooth_audio/1.0/IBluetoothAudio.h>
+#include <hwbinder/ProcessState.h>
+#include <cutils/properties.h>
 
 using namespace android::hardware;
+using com::qualcomm::qti::bluetooth_audio::V1_0::IBluetoothAudio;
 using android::OK;
 
+
+#ifdef ARCH_ARM_32
+//default h/w binder memsize is 1 MB
+#define DEFAULT_HW_BINDER_MEM_SIZE_KB 1024
+
+size_t getHWBinderMmapSize(){
+    int32_t value = DEFAULT_HW_BINDER_MEM_SIZE_KB;
+    value = property_get_int32("persist.vendor.audio.hw.binder.size_kbyte", value);
+    ALOGD("Init hw binder with mem  size = %d  ", value);
+    return 1024 * value;
+}
+#endif
+
 int main(int /* argc */, char* /* argv */ []) {
+#ifdef ARCH_ARM_32
+    android::hardware::ProcessState::initWithMmapSize(getHWBinderMmapSize());
+#endif
     android::ProcessState::initWithDriver("/dev/vndbinder");
     // start a threadpool for vndbinder interactions
     android::ProcessState::self()->startThreadPool();
@@ -52,6 +72,9 @@ int main(int /* argc */, char* /* argv */ []) {
         registerPassthroughServiceImplementation<bluetooth::a2dp::V1_0::IBluetoothAudioOffload>() !=
         OK;
     ALOGW_IF(fail, "Could not register Bluetooth audio offload 1.0");
+
+    fail = registerPassthroughServiceImplementation<IBluetoothAudio>()!= OK;
+    ALOGW_IF(fail, "Could not register bluetooth_audio service");
 
     joinRpcThreadpool();
 }

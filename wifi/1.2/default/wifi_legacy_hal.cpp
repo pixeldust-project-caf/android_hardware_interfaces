@@ -34,7 +34,7 @@ static constexpr uint32_t kMaxGscanFrequenciesForBand = 64;
 static constexpr uint32_t kLinkLayerStatsDataMpduSizeThreshold = 128;
 static constexpr uint32_t kMaxWakeReasonStatsArraySize = 32;
 static constexpr uint32_t kMaxRingBuffers = 10;
-static constexpr uint32_t kMaxStopCompleteWaitMs = 100;
+static constexpr uint32_t kMaxStopCompleteWaitMs = 250;
 
 // Helper function to create a non-const char* for legacy Hal API's.
 std::vector<char> makeCharVec(const std::string& str) {
@@ -740,6 +740,12 @@ wifi_error WifiLegacyHal::configureRoaming(const std::string& iface_name,
                                                      &config_internal);
 }
 
+wifi_error WifiLegacyHal::setLatencyLevel(const std::string& iface_name,
+                                          uint32_t level) {
+    return global_func_table_.wifi_set_latency_level(
+        getIfaceHandle(iface_name), level);
+}
+
 wifi_error WifiLegacyHal::enableFirmwareRoaming(const std::string& iface_name,
                                                 fw_roaming_state_t state) {
     return global_func_table_.wifi_enable_firmware_roaming(
@@ -1381,6 +1387,35 @@ WifiLegacyHal::getGscanCachedResults(const std::string& iface_name) {
         }
     }
     return {status, std::move(cached_scan_results)};
+}
+
+wifi_error WifiLegacyHal::QcAddInterface(const std::string& iface_name,
+                                         const std::string& new_ifname,
+                                         uint32_t type) {
+    wifi_error status = global_func_table_.wifi_add_or_remove_virtual_intf(
+                           getIfaceHandle(iface_name),
+                           new_ifname.c_str(), type, true);
+
+    if (status == WIFI_SUCCESS) {
+        // refresh list of handlers now.
+        iface_name_to_handle_.clear();
+        status = retrieveIfaceHandles();
+    }
+    return status;
+}
+
+wifi_error WifiLegacyHal::QcRemoveInterface(const std::string& iface_name,
+                                            const std::string& ifname) {
+    wifi_error status =  global_func_table_.wifi_add_or_remove_virtual_intf(
+                             getIfaceHandle(iface_name),
+                             ifname.c_str(), 0, false);
+
+    if (status == WIFI_SUCCESS) {
+        // refresh list of handlers now.
+        iface_name_to_handle_.clear();
+        status = retrieveIfaceHandles();
+    }
+    return status;
 }
 
 void WifiLegacyHal::invalidate() {

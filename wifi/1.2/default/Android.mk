@@ -30,6 +30,10 @@ endif
 ifdef WIFI_HIDL_FEATURE_DISABLE_AP
 LOCAL_CPPFLAGS += -DWIFI_HIDL_FEATURE_DISABLE_AP
 endif
+ifdef QC_WIFI_HIDL_FEATURE_DUAL_AP
+LOCAL_CPPFLAGS += -DQC_WIFI_HIDL_FEATURE_DUAL_AP
+endif
+
 LOCAL_SRC_FILES := \
     hidl_struct_util.cpp \
     hidl_sync_util.cpp \
@@ -58,7 +62,8 @@ LOCAL_SHARED_LIBRARIES := \
     libwifi-system-iface \
     android.hardware.wifi@1.0 \
     android.hardware.wifi@1.1 \
-    android.hardware.wifi@1.2
+    android.hardware.wifi@1.2 \
+    vendor.qti.hardware.wifi@1.0
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
 include $(BUILD_STATIC_LIBRARY)
 
@@ -70,6 +75,10 @@ LOCAL_MODULE := android.hardware.wifi@1.0-service
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_PROPRIETARY_MODULE := true
 LOCAL_CPPFLAGS := -Wall -Werror -Wextra
+ifeq ($(TARGET_ARCH),arm)
+    LOCAL_CPPFLAGS += -DARCH_ARM_32
+endif
+
 LOCAL_SRC_FILES := \
     service.cpp
 LOCAL_SHARED_LIBRARIES := \
@@ -80,11 +89,13 @@ LOCAL_SHARED_LIBRARIES := \
     liblog \
     libnl \
     libutils \
+    libhwbinder \
     libwifi-hal \
     libwifi-system-iface \
     android.hardware.wifi@1.0 \
     android.hardware.wifi@1.1 \
-    android.hardware.wifi@1.2
+    android.hardware.wifi@1.2 \
+    vendor.qti.hardware.wifi@1.0
 LOCAL_STATIC_LIBRARIES := \
     android.hardware.wifi@1.0-service-lib
 LOCAL_INIT_RC := android.hardware.wifi@1.0-service.rc
@@ -120,5 +131,6 @@ LOCAL_SHARED_LIBRARIES := \
     libwifi-system-iface \
     android.hardware.wifi@1.0 \
     android.hardware.wifi@1.1 \
-    android.hardware.wifi@1.2
+    android.hardware.wifi@1.2 \
+    vendor.qti.hardware.wifi@1.0
 include $(BUILD_NATIVE_TEST)
