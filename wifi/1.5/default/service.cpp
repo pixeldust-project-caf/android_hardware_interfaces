@@ -20,6 +20,8 @@
 #include <signal.h>
 #include <utils/Looper.h>
 #include <utils/StrongPointer.h>
+#include <hwbinder/ProcessState.h>
+#include <cutils/properties.h>
 
 #include "wifi.h"
 #include "wifi_feature_flags.h"
@@ -38,6 +40,17 @@ using android::hardware::wifi::V1_5::implementation::legacy_hal::
 using android::hardware::wifi::V1_5::implementation::mode_controller::
     WifiModeController;
 
+#ifdef ARCH_ARM_32
+#define DEFAULT_WIFIHAL_HW_BINDER_SIZE_KB 16
+size_t getHWBinderMmapSize() {
+    size_t value = 0;
+    value = property_get_int32("persist.vendor.wifi.wifihal.hw.binder.size", DEFAULT_WIFIHAL_HW_BINDER_SIZE_KB);
+    if (!value) value = DEFAULT_WIFIHAL_HW_BINDER_SIZE_KB; // deafult to 1 page of 4 Kb
+
+    return 1024 * value;
+}
+#endif /* ARCH_ARM_32 */
+
 #ifdef LAZY_SERVICE
 const bool kLazyService = true;
 #else
@@ -46,6 +59,9 @@ const bool kLazyService = false;
 
 int main(int /*argc*/, char** argv) {
     signal(SIGPIPE, SIG_IGN);
+#ifdef ARCH_ARM_32
+    android::hardware::ProcessState::initWithMmapSize(getHWBinderMmapSize());
+#endif /* ARCH_ARM_32 */
     android::base::InitLogging(
         argv, android::base::LogdLogger(android::base::SYSTEM));
     LOG(INFO) << "Wifi Hal is booting up...";

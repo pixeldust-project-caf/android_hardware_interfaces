@@ -42,6 +42,12 @@ endif
 ifdef WIFI_AVOID_IFACE_RESET_MAC_CHANGE
 LOCAL_CPPFLAGS += -DWIFI_AVOID_IFACE_RESET_MAC_CHANGE
 endif
+ifdef QC_WIFI_HIDL_FEATURE_DUAL_AP
+LOCAL_CPPFLAGS += -DQC_WIFI_HIDL_FEATURE_DUAL_AP
+endif
+ifdef QC_WIFI_HIDL_FEATURE_DUAL_STA
+LOCAL_CPPFLAGS += -DQC_WIFI_HIDL_FEATURE_DUAL_STA
+endif
 # Allow implicit fallthroughs in wifi_legacy_hal.cpp until they are fixed.
 LOCAL_CFLAGS += -Wno-error=implicit-fallthrough
 LOCAL_SRC_FILES := \
@@ -94,6 +100,10 @@ LOCAL_VINTF_FRAGMENTS := android.hardware.wifi@1.0-service.xml
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_PROPRIETARY_MODULE := true
 LOCAL_CPPFLAGS := -Wall -Werror -Wextra
+ifeq ($(TARGET_ARCH),arm)
+    LOCAL_CPPFLAGS += -DARCH_ARM_32
+endif
+
 LOCAL_SRC_FILES := \
     service.cpp
 LOCAL_SHARED_LIBRARIES := \
@@ -103,6 +113,7 @@ LOCAL_SHARED_LIBRARIES := \
     liblog \
     libnl \
     libutils \
+    libhwbinder \
     libwifi-hal \
     libwifi-system-iface \
     libxml2 \
