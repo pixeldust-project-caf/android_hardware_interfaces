@@ -267,22 +267,6 @@ int CameraModule::init() {
     return res;
 }
 
-int CameraModule::getCameraDeviceVersion(int cameraId, uint32_t* version) {
-    ATRACE_CALL();
-    int ret;
-    if (getModuleApiVersion() >= CAMERA_MODULE_API_VERSION_2_5 &&
-            mModule->get_camera_device_version != NULL) {
-        ret = mModule->get_camera_device_version(cameraId, version);
-    } else {
-        struct camera_info info;
-        ret = getCameraInfo(cameraId, &info);
-        if (ret == OK) {
-            *version = info.device_version;
-        }
-    }
-    return ret;
-}
-
 int CameraModule::getCameraInfo(int cameraId, struct camera_info *info) {
     ATRACE_CALL();
     Mutex::Autolock lock(mCameraInfoLock);
@@ -383,9 +367,11 @@ int CameraModule::getPhysicalCameraInfo(int physicalCameraId, camera_metadata_t 
 int CameraModule::getDeviceVersion(int cameraId) {
     ssize_t index = mDeviceVersionMap.indexOfKey(cameraId);
     if (index == NAME_NOT_FOUND) {
-        uint32_t deviceVersion;
+        int deviceVersion;
         if (getModuleApiVersion() >= CAMERA_MODULE_API_VERSION_2_0) {
-            getCameraDeviceVersion(cameraId, &deviceVersion);
+            struct camera_info info;
+            getCameraInfo(cameraId, &info);
+            deviceVersion = info.device_version;
         } else {
             deviceVersion = CAMERA_DEVICE_API_VERSION_1_0;
         }
