@@ -48,6 +48,9 @@ endif
 ifdef QC_WIFI_HIDL_FEATURE_DUAL_STA
 LOCAL_CPPFLAGS += -DQC_WIFI_HIDL_FEATURE_DUAL_STA
 endif
+ifdef WIFI_FEATURE_DYNAMIC_SET_MAC
+LOCAL_CPPFLAGS += -DWIFI_FEATURE_DYNAMIC_SET_MAC
+endif
 # Allow implicit fallthroughs in wifi_legacy_hal.cpp until they are fixed.
 LOCAL_CFLAGS += -Wno-error=implicit-fallthrough
 LOCAL_SRC_FILES := \

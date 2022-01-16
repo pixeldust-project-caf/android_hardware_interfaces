@@ -63,15 +63,21 @@ bool WifiIfaceUtil::setMacAddress(const std::string& iface_name,
     uint64_t legacy_feature_set;
     std::tie(legacy_status, legacy_feature_set) =
         legacy_hal_.lock()->getSupportedFeatureSet(iface_name);
-
+#ifndef WIFI_FEATURE_DYNAMIC_SET_MAC
+    //do nothing
+#else
     if (!(legacy_feature_set & WIFI_FEATURE_DYNAMIC_SET_MAC) &&
         !iface_tool_.lock()->SetUpState(iface_name.c_str(), false)) {
         LOG(ERROR) << "SetUpState(false) failed.";
         return false;
     }
 #endif
+#endif
     bool success = iface_tool_.lock()->SetMacAddress(iface_name.c_str(), mac);
 #ifndef WIFI_AVOID_IFACE_RESET_MAC_CHANGE
+#ifndef WIFI_FEATURE_DYNAMIC_SET_MAC
+    //do nothing
+#else
     if (!(legacy_feature_set & WIFI_FEATURE_DYNAMIC_SET_MAC) &&
         !iface_tool_.lock()->SetUpState(iface_name.c_str(), true)) {
         LOG(ERROR) << "SetUpState(true) failed. Wait for driver ready.";
@@ -86,6 +92,7 @@ bool WifiIfaceUtil::setMacAddress(const std::string& iface_name,
             return false;
         }
     }
+#endif
 #endif
     IfaceEventHandlers event_handlers = {};
     const auto it = event_handlers_map_.find(iface_name);
